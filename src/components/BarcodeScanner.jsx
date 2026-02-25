@@ -1,8 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { BrowserMultiFormatReader, DecodeHintType, BarcodeFormat } from '@zxing/library'
 
-const USPS_TRACKING_REGEX = /^9\d{19,33}$/
-
 export default function BarcodeScanner({ isOpen, onResult, onError }) {
   const videoRef = useRef(null)
   const readerRef = useRef(null)
@@ -65,7 +63,18 @@ export default function BarcodeScanner({ isOpen, onResult, onError }) {
         await videoRef.current.play()
 
         const hints = new Map()
-        hints.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.CODE_128])
+        hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+          BarcodeFormat.CODE_128,
+          BarcodeFormat.CODE_39,
+          BarcodeFormat.CODE_93,
+          BarcodeFormat.CODABAR,
+          BarcodeFormat.ITF,
+          BarcodeFormat.EAN_13,
+          BarcodeFormat.EAN_8,
+          BarcodeFormat.UPC_A,
+          BarcodeFormat.UPC_E,
+          BarcodeFormat.QR_CODE,
+        ])
 
         // Limit scan attempts to reduce CPU usage while keeping responsiveness.
         const reader = new BrowserMultiFormatReader(hints, 180)
@@ -74,8 +83,8 @@ export default function BarcodeScanner({ isOpen, onResult, onError }) {
         reader.decodeFromVideoElement(videoRef.current, (result) => {
           if (!result || hasReportedRef.current) return
 
-          const text = result.getText().replace(/\s+/g, '')
-          if (!USPS_TRACKING_REGEX.test(text)) return
+          const text = result.getText()?.trim()
+          if (!text) return
 
           hasReportedRef.current = true
           onResultRef.current?.(text)
