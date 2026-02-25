@@ -1,43 +1,98 @@
 import { useEffect, useRef } from 'react'
 import { BrowserMultiFormatReader, DecodeHintType, BarcodeFormat } from '@zxing/library'
 
+const USPS_TRACKING_REGEX = /^9\d{19,33}$/
+
 export default function BarcodeScanner({ isOpen, onResult, onError }) {
   const videoRef = useRef(null)
   const readerRef = useRef(null)
+  const streamRef = useRef(null)
+  const hasReportedRef = useRef(false)
+  const onResultRef = useRef(onResult)
+  const onErrorRef = useRef(onError)
+
+  useEffect(() => {
+    onResultRef.current = onResult
+  }, [onResult])
+
+  useEffect(() => {
+    onErrorRef.current = onError
+  }, [onError])
 
   useEffect(() => {
     if (!isOpen) return
 
+    let isCancelled = false
+
+    const stopScanner = () => {
+      try {
+        readerRef.current?.reset()
+      } catch {
+        // ignore reset errors during unmount/cleanup
+      }
+
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop())
+        streamRef.current = null
+      }
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = null
+      }
+    }
+
     const start = async () => {
       try {
-        const hints = new Map()
-        hints.set(DecodeHintType.POSSIBLE_FORMATS, [
-          BarcodeFormat.CODE_128,
-          BarcodeFormat.CODE_39,
-          BarcodeFormat.EAN_13,
-          BarcodeFormat.EAN_8,
-          BarcodeFormat.UPC_A,
-          BarcodeFormat.UPC_E,
-          BarcodeFormat.QR_CODE,
-        ])
-        hints.set(DecodeHintType.TRY_HARDER, true)
+        hasReportedRef.current = false
 
-        const reader = new BrowserMultiFormatReader(hints)
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { ideal: 'environment' },
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+            frameRate: { ideal: 24, max: 30 },
+          },
+          audio: false,
+        })
+
+        if (isCancelled || !videoRef.current) {
+          stream.getTracks().forEach((track) => track.stop())
+          return
+        }
+
+        streamRef.current = stream
+        videoRef.current.srcObject = stream
+        await videoRef.current.play()
+
+        const hints = new Map()
+        hints.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.CODE_128])
+
+        // Limit scan attempts to reduce CPU usage while keeping responsiveness.
+        const reader = new BrowserMultiFormatReader(hints, 180)
         readerRef.current = reader
 
-        await reader.decodeFromVideoDevice(null, videoRef.current, (result) => {
-          if (result) onResult(result.getText())
+        reader.decodeFromVideoElement(videoRef.current, (result) => {
+          if (!result || hasReportedRef.current) return
+
+          const text = result.getText().replace(/\s+/g, '')
+          if (!USPS_TRACKING_REGEX.test(text)) return
+
+          hasReportedRef.current = true
+          onResultRef.current?.(text)
+          stopScanner()
         })
-      } catch (e) {
-        console.error('스캐너 오류:', e)
-        onError?.(e.message || '카메라 오류')
+      } catch (error) {
+        console.error(error)
+        onErrorRef.current?.('Camera error')
+        stopScanner()
       }
     }
 
     start()
 
     return () => {
-      try { readerRef.current?.reset() } catch {}
+      isCancelled = true
+      stopScanner()
     }
   }, [isOpen])
 
@@ -58,3 +113,4 @@ export default function BarcodeScanner({ isOpen, onResult, onError }) {
     </div>
   )
 }
+
