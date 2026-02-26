@@ -1,6 +1,24 @@
 import { useEffect, useRef } from 'react'
 import { BrowserMultiFormatReader, DecodeHintType, BarcodeFormat } from '@zxing/library'
 
+const SCAN_FORMATS = [
+  BarcodeFormat.CODE_128,
+  BarcodeFormat.CODE_39,
+  BarcodeFormat.CODE_93,
+  BarcodeFormat.CODABAR,
+  BarcodeFormat.ITF,
+  BarcodeFormat.EAN_13,
+  BarcodeFormat.EAN_8,
+  BarcodeFormat.UPC_A,
+  BarcodeFormat.UPC_E,
+  BarcodeFormat.QR_CODE,
+  BarcodeFormat.DATA_MATRIX,
+  BarcodeFormat.PDF_417,
+  BarcodeFormat.AZTEC,
+  BarcodeFormat.RSS_14,
+  BarcodeFormat.RSS_EXPANDED,
+]
+
 export default function BarcodeScanner({ isOpen, onResult, onError }) {
   const videoRef = useRef(null)
   const readerRef = useRef(null)
@@ -46,9 +64,9 @@ export default function BarcodeScanner({ isOpen, onResult, onError }) {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: {
             facingMode: { ideal: 'environment' },
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
-            frameRate: { ideal: 24, max: 30 },
+            width: { ideal: 1920, min: 1280 },
+            height: { ideal: 1080, min: 720 },
+            frameRate: { ideal: 30, min: 24, max: 60 },
           },
           audio: false,
         })
@@ -61,23 +79,35 @@ export default function BarcodeScanner({ isOpen, onResult, onError }) {
         streamRef.current = stream
         videoRef.current.srcObject = stream
         await videoRef.current.play()
+        videoRef.current.setAttribute('autoplay', 'true')
+        videoRef.current.setAttribute('playsinline', 'true')
+
+        // Try to keep the image sharp for barcode edges.
+        const [videoTrack] = stream.getVideoTracks()
+        if (videoTrack) {
+          const capabilities = videoTrack.getCapabilities?.() || {}
+          const advanced = []
+          if (capabilities.focusMode?.includes('continuous')) {
+            advanced.push({ focusMode: 'continuous' })
+          }
+          if (typeof capabilities.zoom?.max === 'number' && capabilities.zoom.max >= 1.5) {
+            advanced.push({ zoom: Math.min(2, capabilities.zoom.max) })
+          }
+          if (advanced.length > 0) {
+            try {
+              await videoTrack.applyConstraints({ advanced })
+            } catch {
+              // Ignore unsupported camera controls.
+            }
+          }
+        }
 
         const hints = new Map()
-        hints.set(DecodeHintType.POSSIBLE_FORMATS, [
-          BarcodeFormat.CODE_128,
-          BarcodeFormat.CODE_39,
-          BarcodeFormat.CODE_93,
-          BarcodeFormat.CODABAR,
-          BarcodeFormat.ITF,
-          BarcodeFormat.EAN_13,
-          BarcodeFormat.EAN_8,
-          BarcodeFormat.UPC_A,
-          BarcodeFormat.UPC_E,
-          BarcodeFormat.QR_CODE,
-        ])
+        hints.set(DecodeHintType.POSSIBLE_FORMATS, SCAN_FORMATS)
+        hints.set(DecodeHintType.TRY_HARDER, true)
 
-        // Limit scan attempts to reduce CPU usage while keeping responsiveness.
-        const reader = new BrowserMultiFormatReader(hints, 180)
+        // Faster polling improves lock-on speed on mobile cameras.
+        const reader = new BrowserMultiFormatReader(hints, 70)
         readerRef.current = reader
 
         reader.decodeFromVideoElement(videoRef.current, (result) => {
