@@ -1,63 +1,87 @@
-import { useState } from 'react'
-import BarcodeScanner from '../components/BarcodeScanner'
+import { useRef, useState } from 'react'
+import { extractTrackingNoFromImage } from '../lib/openaiVision'
 
-// Step 1: 트래킹 번호 스캔
-export default function StepTracking({ onNext, showToast }) {
-  const [scanning, setScanning] = useState(false)
+export default function StepTracking({ onNext, showToast, settings }) {
   const [scanned, setScanned] = useState('')
   const [input, setInput] = useState('')
+  const [processing, setProcessing] = useState(false)
+  const fileInputRef = useRef(null)
 
-  const handleScanResult = (text) => {
-    setScanned(text)
-    setInput(text)
-    setScanning(false)
-    showToast('✅ 트래킹 번호 스캔 완료', 'success')
+  const handleFileChange = async (event) => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+
+    const apiKey = settings?.openaiApiKey?.trim()
+    const model = settings?.openaiModel?.trim() || 'gpt-4.1-mini'
+    if (!apiKey) {
+      showToast('Settings?? OpenAI API Key? ?? ?????', 'error')
+      return
+    }
+
+    setProcessing(true)
+    try {
+      const trackingNo = await extractTrackingNoFromImage({ apiKey, model, file })
+      if (!trackingNo) {
+        showToast('??? ??? ?? ?????. ?? ?????', 'error')
+        return
+      }
+
+      setScanned(trackingNo)
+      setInput(trackingNo)
+      showToast('??? ?? ?? ??', 'success')
+    } catch (error) {
+      showToast(`?? ??: ${error.message}`, 'error')
+    } finally {
+      setProcessing(false)
+    }
   }
 
   const handleNext = () => {
     const val = input.trim() || scanned
-    if (!val) { showToast('트래킹 번호를 입력하세요', 'error'); return }
+    if (!val) {
+      showToast('??? ??? ?????', 'error')
+      return
+    }
     onNext(val)
   }
 
   return (
     <div className="card">
-      <div className="card-label">트래킹 번호</div>
+      <div className="card-label">??? ??</div>
 
-      {/* 바코드 스캐너 */}
-      <BarcodeScanner
-        isOpen={scanning}
-        onResult={handleScanResult}
-        onError={(msg) => { showToast('카메라 오류: ' + msg, 'error'); setScanning(false) }}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        style={{ display: 'none' }}
+        onChange={handleFileChange}
       />
 
-      {/* 스캔 결과 표시 */}
       <div className="result-row">
         <span className="result-tag">NO</span>
-        <span className={`result-val ${!scanned ? 'empty' : ''}`}>
-          {scanned || '스캔 또는 직접 입력'}
-        </span>
+        <span className={`result-val ${!scanned ? 'empty' : ''}`}>{scanned || '?? ?? ?? ??'}</span>
       </div>
 
-      {/* 스캔 토글 버튼 */}
       <button
-        className={`scan-btn ${scanning ? 'active-scan' : ''}`}
-        onClick={() => setScanning(s => !s)}
+        className="scan-btn"
+        onClick={() => fileInputRef.current?.click()}
+        disabled={processing}
       >
-        {scanning ? '⏹ 스캔 중지' : '📷 바코드 스캔'}
+        {processing ? '?? ?...' : '?? ?? ? GPT ??'}
       </button>
 
       <hr className="divider" />
 
-      {/* 수동 입력 */}
       <div className="field">
-        <label>직접 입력</label>
+        <label>?? ??</label>
         <input
           type="text"
           placeholder="1Z999AA10123456784"
           value={input}
-          onChange={e => setInput(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && handleNext()}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleNext()}
           autoComplete="off"
           autoCorrect="off"
           spellCheck="false"
@@ -65,7 +89,7 @@ export default function StepTracking({ onNext, showToast }) {
       </div>
 
       <div className="action-row">
-        <button className="btn-primary" onClick={handleNext}>다음 →</button>
+        <button className="btn-primary" onClick={handleNext}>?? ?</button>
       </div>
     </div>
   )

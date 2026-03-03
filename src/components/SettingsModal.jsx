@@ -1,8 +1,9 @@
 import { useState } from 'react'
 
-// 설정 바텀 시트 모달
 export default function SettingsModal({ settings, onClose, onSave }) {
   const [url, setUrl] = useState(settings.webhookUrl || '')
+  const [openaiApiKey, setOpenaiApiKey] = useState(settings.openaiApiKey || '')
+  const [openaiModel, setOpenaiModel] = useState(settings.openaiModel || 'gpt-4.1-mini')
   const [mapping, setMapping] = useState(
     settings.upcMapping ? JSON.stringify(settings.upcMapping, null, 2) : ''
   )
@@ -11,9 +12,14 @@ export default function SettingsModal({ settings, onClose, onSave }) {
   const handleSave = () => {
     try {
       const parsed = mapping.trim() ? JSON.parse(mapping) : {}
-      onSave({ webhookUrl: url.trim(), upcMapping: parsed })
+      onSave({
+        webhookUrl: url.trim(),
+        upcMapping: parsed,
+        openaiApiKey: openaiApiKey.trim(),
+        openaiModel: openaiModel.trim() || 'gpt-4.1-mini',
+      })
     } catch {
-      setErr('JSON 형식 오류를 확인하세요')
+      setErr('JSON ?? ??? ?????')
     }
   }
 
@@ -40,7 +46,6 @@ export default function SettingsModal({ settings, onClose, onSave }) {
         overflowY: 'auto',
         animation: 'slideUp 0.3s ease',
       }}>
-        {/* 핸들 바 */}
         <div style={{
           width: 36, height: 4,
           background: 'var(--border2)',
@@ -56,17 +61,36 @@ export default function SettingsModal({ settings, onClose, onSave }) {
           textTransform: 'uppercase',
           marginBottom: 16,
         }}>
-          ⚙ 설정
+          ? Settings
         </div>
 
-        {/* 웹훅 URL */}
         <div className="field">
-          <label>Apps Script 웹훅 URL</label>
+          <label>Apps Script Webhook URL</label>
           <input
             type="text"
             placeholder="https://script.google.com/macros/s/..."
             value={url}
             onChange={e => setUrl(e.target.value)}
+          />
+        </div>
+
+        <div className="field" style={{ marginTop: 12 }}>
+          <label>OpenAI API Key (Vision)</label>
+          <input
+            type="password"
+            placeholder="sk-..."
+            value={openaiApiKey}
+            onChange={e => setOpenaiApiKey(e.target.value)}
+          />
+        </div>
+
+        <div className="field" style={{ marginTop: 12 }}>
+          <label>OpenAI Model</label>
+          <input
+            type="text"
+            placeholder="gpt-4.1-mini"
+            value={openaiModel}
+            onChange={e => setOpenaiModel(e.target.value)}
           />
         </div>
 
@@ -77,12 +101,11 @@ export default function SettingsModal({ settings, onClose, onSave }) {
           lineHeight: 1.6,
           fontFamily: 'var(--mono)',
         }}>
-          Google Apps Script에서 웹앱 배포 후 URL을 붙여넣으세요.
+          API key is stored in localStorage for this browser only.
         </p>
 
-        {/* UPC → SKU 매핑 */}
         <div className="field" style={{ marginTop: 14 }}>
-          <label>UPC → SKU 매핑 (JSON)</label>
+          <label>UPC ? SKU Mapping (JSON)</label>
           <textarea
             style={{ height: 110, resize: 'vertical', fontFamily: 'var(--mono)', fontSize: 12 }}
             placeholder={'{\n  "012345678901": "SKU-001",\n  "098765432109": "SKU-002"\n}'}
@@ -97,8 +120,8 @@ export default function SettingsModal({ settings, onClose, onSave }) {
         </div>
 
         <div className="action-row" style={{ marginTop: 16 }}>
-          <button className="btn-ghost" onClick={onClose}>닫기</button>
-          <button className="btn-primary" onClick={handleSave}>저장</button>
+          <button className="btn-ghost" onClick={onClose}>??</button>
+          <button className="btn-primary" onClick={handleSave}>??</button>
         </div>
       </div>
 
