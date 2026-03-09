@@ -35,17 +35,19 @@ export default function Header({ itemCount, onSettingsOpen }) {
         <button
           onClick={onSettingsOpen}
           style={{
-            width: 32, height: 32,
+            minWidth: 56,
+            height: 32,
+            padding: '0 10px',
             background: 'var(--s2)',
             border: '1px solid var(--border)',
             borderRadius: 8,
             color: 'var(--muted)',
-            fontSize: 14,
+            fontSize: 12,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             transition: 'all 0.15s',
           }}
         >
-          ⚙
+          설정
         </button>
       </div>
     </header>

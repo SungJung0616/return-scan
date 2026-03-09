@@ -1,13 +1,13 @@
-// 최종 서머리 + 구글 시트 전송 화면
+// 최종 요약 및 전송 화면
 const TAG_MAP = {
-  good:    { label: '양품',   cls: 'good' },
+  good: { label: '양품', cls: 'good' },
   damaged: { label: '데미지', cls: 'damaged' },
-  discard: { label: '폐기',   cls: 'discard' },
+  discard: { label: '폐기', cls: 'discard' },
 }
 
 export default function StepSummary({ trackingNo, items, onBack, onSubmit, submitting, onReset }) {
   const counts = {
-    good:    items.filter(i => i.status === 'good').length,
+    good: items.filter(i => i.status === 'good').length,
     damaged: items.filter(i => i.status === 'damaged').length,
     discard: items.filter(i => i.status === 'discard').length,
   }
@@ -16,7 +16,6 @@ export default function StepSummary({ trackingNo, items, onBack, onSubmit, submi
     <div className="card">
       <div className="card-label">최종 확인 & 전송</div>
 
-      {/* 트래킹 번호 */}
       <div style={{
         display: 'flex', alignItems: 'center', gap: 10,
         padding: '12px 14px',
@@ -35,7 +34,6 @@ export default function StepSummary({ trackingNo, items, onBack, onSubmit, submi
         </div>
       </div>
 
-      {/* 통계 */}
       <div style={{
         display: 'flex',
         border: '1px solid var(--border)',
@@ -44,10 +42,10 @@ export default function StepSummary({ trackingNo, items, onBack, onSubmit, submi
         marginBottom: 14,
       }}>
         {[
-          { label: '전체',   num: items.length,   color: 'var(--text)' },
-          { label: '양품',   num: counts.good,    color: 'var(--green)' },
-          { label: '데미지', num: counts.damaged,  color: 'var(--orange)' },
-          { label: '폐기',   num: counts.discard,  color: 'var(--red)' },
+          { label: '전체', num: items.length, color: 'var(--text)' },
+          { label: '양품', num: counts.good, color: 'var(--green)' },
+          { label: '데미지', num: counts.damaged, color: 'var(--orange)' },
+          { label: '폐기', num: counts.discard, color: 'var(--red)' },
         ].map((s, i, arr) => (
           <div key={s.label} style={{
             flex: 1,
@@ -63,7 +61,6 @@ export default function StepSummary({ trackingNo, items, onBack, onSubmit, submi
         ))}
       </div>
 
-      {/* 아이템 목록 */}
       {items.map((item, i) => {
         const t = TAG_MAP[item.status]
         return (
@@ -88,11 +85,10 @@ export default function StepSummary({ trackingNo, items, onBack, onSubmit, submi
         )
       })}
 
-      {/* 버튼 */}
       <div className="action-row" style={{ marginTop: 14 }}>
         <button className="btn-back" onClick={onBack}>←</button>
         <button className="btn-primary" onClick={onSubmit} disabled={submitting}>
-          {submitting ? <><span className="spinner" /> 전송 중...</> : '📊 구글 시트 전송'}
+          {submitting ? <><span className="spinner" /> 전송 중...</> : '구글 시트 전송'}
         </button>
       </div>
 
@@ -101,7 +97,7 @@ export default function StepSummary({ trackingNo, items, onBack, onSubmit, submi
         style={{ marginTop: 10, width: '100%', color: 'var(--red)', borderColor: 'var(--red)' }}
         onClick={onReset}
       >
-        🔄 새 트래킹 시작
+        새 트래킹 시작
       </button>
     </div>
   )

@@ -1,9 +1,9 @@
 import { useState } from 'react'
 
 const STATUSES = [
-  { key: 'good',    icon: '✅', title: '양품 재포장 가능', desc: '상품 및 포장 상태 양호' },
-  { key: 'damaged', icon: '📦', title: '박스 데미지',       desc: '내용물 이상 없으나 포장 손상' },
-  { key: 'discard', icon: '🗑️', title: '폐기',             desc: '사용 불가 / 오염 / 파손' },
+  { key: 'good', icon: '양품', title: '양품 재포장 가능', desc: '상품 및 포장 상태 양호' },
+  { key: 'damaged', icon: '박스', title: '박스 데미지', desc: '내용물 이상 없으나 포장 손상' },
+  { key: 'discard', icon: '폐기', title: '폐기', desc: '사용 불가 / 오염 / 파손' },
 ]
 
 // Step 4: 상태 선택 후 항목 추가
@@ -20,7 +20,6 @@ export default function StepStatus({ currentItem, onAdd, onBack }) {
     <div className="card">
       <div className="card-label">상품 상태 선택</div>
 
-      {/* 상태 선택 버튼 */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {STATUSES.map(s => (
           <button
@@ -29,7 +28,7 @@ export default function StepStatus({ currentItem, onAdd, onBack }) {
             className={`status-btn ${status === s.key ? 'selected' : ''}`}
             onClick={() => setStatus(s.key)}
           >
-            <span style={{ fontSize: 22, flexShrink: 0 }}>{s.icon}</span>
+            <span style={{ fontSize: 14, flexShrink: 0, minWidth: 32 }}>{s.icon}</span>
             <div style={{ flex: 1, textAlign: 'left' }}>
               <div style={{ fontSize: 14, fontWeight: 700 }}>{s.title}</div>
               <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2, fontWeight: 400 }}>{s.desc}</div>
@@ -53,7 +52,6 @@ export default function StepStatus({ currentItem, onAdd, onBack }) {
         ))}
       </div>
 
-      {/* 현재 입력 미리보기 */}
       <div style={{
         marginTop: 12,
         background: 'var(--s2)',

@@ -19,7 +19,7 @@ export default function SettingsModal({ settings, onClose, onSave }) {
         openaiModel: openaiModel.trim() || 'gpt-4.1-mini',
       })
     } catch {
-      setErr('JSON ?? ??? ?????')
+      setErr('JSON 형식이 올바르지 않습니다')
     }
   }
 
@@ -61,7 +61,7 @@ export default function SettingsModal({ settings, onClose, onSave }) {
           textTransform: 'uppercase',
           marginBottom: 16,
         }}>
-          ? Settings
+          Settings
         </div>
 
         <div className="field">
@@ -105,7 +105,7 @@ export default function SettingsModal({ settings, onClose, onSave }) {
         </p>
 
         <div className="field" style={{ marginTop: 14 }}>
-          <label>UPC ? SKU Mapping (JSON)</label>
+          <label>UPC → SKU 매핑 (JSON)</label>
           <textarea
             style={{ height: 110, resize: 'vertical', fontFamily: 'var(--mono)', fontSize: 12 }}
             placeholder={'{\n  "012345678901": "SKU-001",\n  "098765432109": "SKU-002"\n}'}
@@ -120,8 +120,8 @@ export default function SettingsModal({ settings, onClose, onSave }) {
         </div>
 
         <div className="action-row" style={{ marginTop: 16 }}>
-          <button className="btn-ghost" onClick={onClose}>??</button>
-          <button className="btn-primary" onClick={handleSave}>??</button>
+          <button className="btn-ghost" onClick={onClose}>취소</button>
+          <button className="btn-primary" onClick={handleSave}>저장</button>
         </div>
       </div>
 

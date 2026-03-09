@@ -1,66 +1,49 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
+import { useGptImageScan } from '../hooks/useGptImageScan'
 import { extractExpLotFromImage } from '../lib/openaiVision'
 
-export default function StepOCR({ onNext, onBack, showToast, settings }) {
+export default function StepOCR({ onNext, onBack, showToast, settings, onOpenSettings }) {
   const [exp, setExp] = useState('')
   const [lot, setLot] = useState('')
-  const [processing, setProcessing] = useState(false)
-  const fileInputRef = useRef(null)
 
-  const handleFileChange = async (event) => {
-    const file = event.target.files?.[0]
-    event.target.value = ''
-    if (!file) return
+  const { processing, openPicker, inputProps } = useGptImageScan({
+    settings,
+    showToast,
+    onOpenSettings,
+    scan: async ({ file, apiKey, model }) => {
+      try {
+        const result = await extractExpLotFromImage({ apiKey, model, file })
+        if (result.exp) setExp(result.exp)
+        if (result.lot) setLot(result.lot)
 
-    const apiKey = settings?.openaiApiKey?.trim()
-    const model = settings?.openaiModel?.trim() || 'gpt-4.1-mini'
-    if (!apiKey) {
-      showToast('Settings?? OpenAI API Key? ?? ?????', 'error')
-      return
-    }
-
-    setProcessing(true)
-    try {
-      const result = await extractExpLotFromImage({ apiKey, model, file })
-      if (result.exp) setExp(result.exp)
-      if (result.lot) setLot(result.lot)
-
-      if (!result.exp && !result.lot) {
-        showToast('EXP/Lot? ?? ?????. ?? ?????', 'error')
-      } else {
-        showToast('EXP/Lot ?? ??', 'success')
+        if (!result.exp && !result.lot) {
+          showToast('EXP 또는 Lot를 찾지 못했습니다. 직접 입력해 주세요.', 'error')
+        } else {
+          showToast('EXP/Lot 인식 완료', 'success')
+        }
+      } catch (error) {
+        showToast(`인식 오류: ${error.message}`, 'error')
       }
-    } catch (error) {
-      showToast(`?? ??: ${error.message}`, 'error')
-    } finally {
-      setProcessing(false)
-    }
-  }
+    },
+  })
 
   return (
     <div className="card">
-      <div className="card-label">???? / Lot ??</div>
+      <div className="card-label">유통기한 / Lot 번호</div>
 
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        capture="environment"
-        style={{ display: 'none' }}
-        onChange={handleFileChange}
-      />
+      <input {...inputProps} />
 
       <button
         className="scan-btn"
-        onClick={() => fileInputRef.current?.click()}
+        onClick={openPicker}
         disabled={processing}
       >
-        {processing ? '?? ?...' : '?? ?? ? GPT ??'}
+        {processing ? '사진 분석 중...' : '사진 찍고 GPT로 읽기'}
       </button>
 
       <div className="two-col">
         <div className="field" style={{ marginTop: 0 }}>
-          <label>EXP (????)</label>
+          <label>EXP (유통기한)</label>
           <input
             type="text"
             placeholder="2025-12"
@@ -70,7 +53,7 @@ export default function StepOCR({ onNext, onBack, showToast, settings }) {
           />
         </div>
         <div className="field" style={{ marginTop: 0 }}>
-          <label>Lot ??</label>
+          <label>Lot 번호</label>
           <input
             type="text"
             placeholder="L240115A"
@@ -82,8 +65,8 @@ export default function StepOCR({ onNext, onBack, showToast, settings }) {
       </div>
 
       <div className="action-row">
-        <button className="btn-back" onClick={onBack}>?</button>
-        <button className="btn-primary" onClick={() => onNext({ exp, lot })}>?? ?</button>
+        <button className="btn-back" onClick={onBack}>←</button>
+        <button className="btn-primary" onClick={() => onNext({ exp, lot })}>다음</button>
       </div>
     </div>
   )

@@ -14,12 +14,15 @@ export default function StepUPC({ onNext, onBack, resolveSKU, showToast }) {
     setUpc(text)
     setInput(text)
     setScanning(false)
-    showToast('✅ UPC 스캔 완료', 'success')
+    showToast('UPC 스캔 완료', 'success')
   }
 
   const handleNext = () => {
     const val = input.trim() || upc
-    if (!val) { showToast('UPC를 스캔하거나 입력하세요', 'error'); return }
+    if (!val) {
+      showToast('UPC를 스캔하거나 입력해 주세요.', 'error')
+      return
+    }
     onNext({ upc: val, sku: resolveSKU(val) })
   }
 
@@ -27,14 +30,15 @@ export default function StepUPC({ onNext, onBack, resolveSKU, showToast }) {
     <div className="card">
       <div className="card-label">UPC / SKU 스캔</div>
 
-      {/* 바코드 스캐너 */}
       <BarcodeScanner
         isOpen={scanning}
         onResult={handleScanResult}
-        onError={(msg) => { showToast('카메라 오류: ' + msg, 'error'); setScanning(false) }}
+        onError={(msg) => {
+          showToast('카메라 오류: ' + msg, 'error')
+          setScanning(false)
+        }}
       />
 
-      {/* UPC 결과 */}
       <div className="result-row">
         <span className="result-tag">UPC</span>
         <span className={`result-val ${!upc ? 'empty' : ''}`}>
@@ -42,17 +46,15 @@ export default function StepUPC({ onNext, onBack, resolveSKU, showToast }) {
         </span>
       </div>
 
-      {/* 스캔 버튼 */}
       <button
         className={`scan-btn ${scanning ? 'active-scan' : ''}`}
         onClick={() => setScanning(s => !s)}
       >
-        {scanning ? '⏹ 스캔 중지' : '📷 UPC 스캔'}
+        {scanning ? '스캔 중지' : 'UPC 스캔'}
       </button>
 
       <hr className="divider" />
 
-      {/* 수동 입력 */}
       <div className="field">
         <label>직접 입력 (UPC or SKU)</label>
         <input
@@ -67,7 +69,6 @@ export default function StepUPC({ onNext, onBack, resolveSKU, showToast }) {
         />
       </div>
 
-      {/* SKU 매핑 결과 */}
       {sku && (
         <div className="result-row" style={{ marginTop: 8 }}>
           <span className="result-tag">SKU</span>

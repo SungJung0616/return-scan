@@ -1,14 +1,13 @@
 // 현재 트래킹 번호에 추가된 SKU 목록 컴포넌트
 const TAG_MAP = {
-  good:    { label: '양품',   cls: 'good' },
+  good: { label: '양품', cls: 'good' },
   damaged: { label: '데미지', cls: 'damaged' },
-  discard: { label: '폐기',   cls: 'discard' },
+  discard: { label: '폐기', cls: 'discard' },
 }
 
 export default function SKUList({ items, onRemove, onAddMore, onGoToSummary }) {
   return (
     <div className="card">
-      {/* 헤더 */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
         <span style={{
           fontFamily: 'var(--mono)',
@@ -37,7 +36,6 @@ export default function SKUList({ items, onRemove, onAddMore, onGoToSummary }) {
         </button>
       </div>
 
-      {/* 아이템 목록 */}
       {items.length === 0 ? (
         <div className="empty-state">아직 추가된 항목 없음</div>
       ) : (
@@ -78,14 +76,13 @@ export default function SKUList({ items, onRemove, onAddMore, onGoToSummary }) {
                   flexShrink: 0,
                 }}
               >
-                ✕
+                ×
               </button>
             </div>
           )
         })
       )}
 
-      {/* 전송 준비 버튼 */}
       {items.length > 0 && (
         <button
           className="btn-primary"

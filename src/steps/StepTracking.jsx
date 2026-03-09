@@ -1,46 +1,36 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
+import { useGptImageScan } from '../hooks/useGptImageScan'
 import { extractTrackingNoFromImage } from '../lib/openaiVision'
 
-export default function StepTracking({ onNext, showToast, settings }) {
+export default function StepTracking({ onNext, showToast, settings, onOpenSettings }) {
   const [scanned, setScanned] = useState('')
   const [input, setInput] = useState('')
-  const [processing, setProcessing] = useState(false)
-  const fileInputRef = useRef(null)
 
-  const handleFileChange = async (event) => {
-    const file = event.target.files?.[0]
-    event.target.value = ''
-    if (!file) return
+  const { processing, openPicker, inputProps } = useGptImageScan({
+    settings,
+    showToast,
+    onOpenSettings,
+    scan: async ({ file, apiKey, model }) => {
+      try {
+        const trackingNo = await extractTrackingNoFromImage({ apiKey, model, file })
+        if (!trackingNo) {
+          showToast('트래킹 번호를 찾지 못했습니다. 직접 입력해 주세요.', 'error')
+          return
+        }
 
-    const apiKey = settings?.openaiApiKey?.trim()
-    const model = settings?.openaiModel?.trim() || 'gpt-4.1-mini'
-    if (!apiKey) {
-      showToast('Settings?? OpenAI API Key? ?? ?????', 'error')
-      return
-    }
-
-    setProcessing(true)
-    try {
-      const trackingNo = await extractTrackingNoFromImage({ apiKey, model, file })
-      if (!trackingNo) {
-        showToast('??? ??? ?? ?????. ?? ?????', 'error')
-        return
+        setScanned(trackingNo)
+        setInput(trackingNo)
+        showToast('트래킹 번호를 읽었습니다.', 'success')
+      } catch (error) {
+        showToast(`인식 오류: ${error.message}`, 'error')
       }
-
-      setScanned(trackingNo)
-      setInput(trackingNo)
-      showToast('??? ?? ?? ??', 'success')
-    } catch (error) {
-      showToast(`?? ??: ${error.message}`, 'error')
-    } finally {
-      setProcessing(false)
-    }
-  }
+    },
+  })
 
   const handleNext = () => {
     const val = input.trim() || scanned
     if (!val) {
-      showToast('??? ??? ?????', 'error')
+      showToast('트래킹 번호를 입력해 주세요.', 'error')
       return
     }
     onNext(val)
@@ -48,34 +38,27 @@ export default function StepTracking({ onNext, showToast, settings }) {
 
   return (
     <div className="card">
-      <div className="card-label">??? ??</div>
+      <div className="card-label">트래킹 번호</div>
 
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        capture="environment"
-        style={{ display: 'none' }}
-        onChange={handleFileChange}
-      />
+      <input {...inputProps} />
 
       <div className="result-row">
         <span className="result-tag">NO</span>
-        <span className={`result-val ${!scanned ? 'empty' : ''}`}>{scanned || '?? ?? ?? ??'}</span>
+        <span className={`result-val ${!scanned ? 'empty' : ''}`}>{scanned || '스캔 또는 직접 입력'}</span>
       </div>
 
       <button
         className="scan-btn"
-        onClick={() => fileInputRef.current?.click()}
+        onClick={openPicker}
         disabled={processing}
       >
-        {processing ? '?? ?...' : '?? ?? ? GPT ??'}
+        {processing ? '사진 분석 중...' : '사진 찍고 GPT로 읽기'}
       </button>
 
       <hr className="divider" />
 
       <div className="field">
-        <label>?? ??</label>
+        <label>직접 입력</label>
         <input
           type="text"
           placeholder="1Z999AA10123456784"
@@ -89,7 +72,7 @@ export default function StepTracking({ onNext, showToast, settings }) {
       </div>
 
       <div className="action-row">
-        <button className="btn-primary" onClick={handleNext}>?? ?</button>
+        <button className="btn-primary" onClick={handleNext}>다음</button>
       </div>
     </div>
   )

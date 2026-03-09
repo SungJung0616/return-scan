@@ -132,9 +132,9 @@ export default function App() {
           </>
         ) : (
           <>
-            {step === 1 && <StepTracking onNext={handleTrackingNext} showToast={showToast} settings={settings} />}
+            {step === 1 && <StepTracking onNext={handleTrackingNext} showToast={showToast} settings={settings} onOpenSettings={() => setShowSettings(true)} />}
             {step === 2 && <StepUPC onNext={handleUPCNext} onBack={() => setStep(1)} resolveSKU={resolveSKU} showToast={showToast} />}
-            {step === 3 && <StepOCR onNext={handleOCRNext} onBack={() => setStep(2)} showToast={showToast} settings={settings} />}
+            {step === 3 && <StepOCR onNext={handleOCRNext} onBack={() => setStep(2)} showToast={showToast} settings={settings} onOpenSettings={() => setShowSettings(true)} />}
             {step === 4 && <StepStatus currentItem={currentItem} onAdd={handleAddItem} onBack={() => setStep(3)} />}
 
             {/* SKU 목록은 step 2 이상에서 항상 표시 */}
